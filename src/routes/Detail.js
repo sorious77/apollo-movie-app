@@ -1,11 +1,12 @@
 import { useParams } from "react-router-dom";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useMutation } from "@apollo/client";
 import styled from "styled-components";
 import Suggest from "../components/Suggest";
 
 const GET_MOVIE = gql`
   query getMovie($id: Int!) {
     movie(id: $id) {
+      id
       title
       medium_cover_image
       description_intro
@@ -16,6 +17,12 @@ const GET_MOVIE = gql`
       id
       medium_cover_image
     }
+  }
+`;
+
+const LIKE_MOVIE = gql`
+  mutation likeMovie($id: Int!) {
+    likeMovie(id: $id) @client
   }
 `;
 
@@ -50,7 +57,7 @@ const Description = styled.p`
 
 const Poster = styled.div`
   width: 25%;
-  height: 60%;
+  height: 80%;
   border-radius: 10px;
   border: none;
   background-color: transparent;
@@ -70,13 +77,27 @@ const Suggestions = styled.div`
   display: flex;
 `;
 
+const LikeButton = styled.button`
+  position: absolute;
+  color: red;
+  font-size: 20px;
+  border-radius: 50%;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+`;
+
 const Detail = () => {
   const { id } = useParams();
   const { loading, data } = useQuery(GET_MOVIE, {
     variables: { id: +id },
   });
-
-  console.log(loading, data);
+  const [likeMovie] = useMutation(LIKE_MOVIE, {
+    variables: { id: +id },
+  });
 
   return (
     <Container>
@@ -103,7 +124,15 @@ const Detail = () => {
           ))}
         </Suggestions>
       </Column>
-      <Poster bg={data?.movie?.medium_cover_image}></Poster>
+      <Poster bg={data?.movie?.medium_cover_image}>
+        {data?.movie ? (
+          <LikeButton onClick={likeMovie}>
+            {data?.movie?.isLiked ? "💖" : "🤍"}
+          </LikeButton>
+        ) : (
+          <></>
+        )}
+      </Poster>
     </Container>
   );
 };
